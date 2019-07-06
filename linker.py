@@ -1,3 +1,4 @@
+import pdb
 import argparse
 import codecs
 import copy
@@ -35,6 +36,8 @@ def clean_text(text):
 def normalize(text):
     return re.sub('\s+', " ", text.strip().replace("\n", " "))
 
+def letters_only(text):
+    return "".join([elem for elem in text if elem.isalpha()])
 
 def clean_amendment(text):
     text = normalize(text.strip('•'))
@@ -147,7 +150,7 @@ class Document():
         else:
             self.main_doc_title = None
         self.incoming_links = []
-        self.links = list(self.all_links())
+        # self.links = list(self.all_links())
         self.soup = None # the soup object is not trivially pickled because of the recursion, so we'd better null it
        
     def __repr__(self):
@@ -214,12 +217,11 @@ class Indexer():
         self.index = {}
 
     def pickle(self, name='default'):
-        with open("index_{}".format(name), "wb") as fh:
+        with open("ind_{}".format(name), "wb") as fh:
             pickle.dump(self.index, fh)
 
-    @timeit
     def unpickle(self, name='default'):
-        with open("index_{}".format(name), "rb") as fh:
+        with open("ind_{}".format(name), "rb") as fh:
             self.index = pickle.load(fh)
 
 
@@ -238,8 +240,6 @@ class Indexer():
                 self.index[(maybe_doc.html_file, maybe_doc.folder)] = maybe_doc
         pool.close()
         pool.join()
-        #for fl, folder in docs:
-            #self.index[folder] = Document((fl, folder))
     
 
     @timeit
@@ -326,16 +326,25 @@ class Indexer():
                  sources = self.find_sources(target_doc)
                  for match in re.finditer(quoted_pattern, target.text):
                          txt = clean_amendment(match[1])
+                         #if u'Банк в установленном порядке посредством Терминала' in txt:
+                         #   print (txt)
                          for source in sources:
-                             found = txt in normalize(source.text)
+                             found = letters_only(txt) in letters_only(normalize(source.text))
                              if found:
                                 for pattern in text_to_patterns(txt):
+                                    #print (pattern)
                                     yield (pattern, source)
+                             
 
         def add_link_to_element(elem, link_url):
-           if elem.a:
-                elem.a["href"] = link_url
-           else:
+           modified = False
+           # first, I tried a simplier construction like
+           # if elem.a: elem.a["href"] = link_url
+           # but it modified only part of the links
+           for a in elem.find_all('a'):
+                a["href"] = link_url
+                modified = True
+           if not modified:
                txt = elem.text
                new_tag = source.soup.new_tag("a", href=link_url)
                new_tag.string = txt
@@ -357,7 +366,7 @@ class Indexer():
                     target_fname = os.path.join(target.folder, target.html_file)
                     link_url = "../{}#{}".format(target_fname, paragraph or "")
                     add_link_to_element(p, link_url)
-                    print(link_url, "\n")
+                    #print(link_url, "\n")
 
 
         def find_target(elem, target):    
@@ -365,6 +374,7 @@ class Indexer():
             while True and elem:
                 previous = elem.find_previous_sibling()
                 if previous and (target in previous.text):
+                    name = ""
                     if previous.a:
                         name = previous.find('a').get('name')
                     else:
@@ -391,21 +401,17 @@ class Indexer():
 
         for target in self.index.values():
             marker_text = u'в следующей редакции'
-            modified = list()
+            modified = set()
             for pattern, source in gen_matches(target):
-                print (target)
-                print (source)
-                print (pattern)
                 paragraph = process_target_html(pattern, target, marker_text)
                 modify_source_html(pattern, source, target, paragraph)
-                modified.append(source)
+                modified.add(source)
             for doc in modified:
                 current_fname = os.path.join(FOLDER, doc.folder, doc.html_file)
                 new_fname = current_fname.replace(".html", "_new.html")
                 with open(new_fname, 'w') as fh:
                     fh.write(doc.soup.prettify())
                     print (new_fname)
-                    print ('---\n')
 
 
 
@@ -413,9 +419,9 @@ if __name__ == "__main__":
     args = parse_args()
 
     s = Indexer(args.number)
-    # s.run(); s.pickle()
-    #s.unpickle()
+    s.run(); 
+    s.pickle()
+    s.unpickle()
     #s.process_links(); s.pickle('links')
-    s.unpickle('links')
+    #s.unpickle('links')
     s.add_link_to_amendments()
-    # s.pickle('amendments')
