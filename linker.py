@@ -19,6 +19,9 @@ modify_source_html модифицирует html-дерево (в формате
 """
 
 def add_links(index):
+    # folder, fname = ("D138D5D36436D0CA442579E900265CF8", "201_2012Н.html")
+    # target = index.get((fname, folder))
+    # if target:
     for target in index.values():
         modified = set()
         marker_text = MARKER_TEXT
@@ -40,11 +43,12 @@ def gen_matches(index, target_doc, marker_text):
                 for sentence in re.split('\.|:', partition):
                     if len(sentence)>20:
                         escaped = re.escape(sentence).replace("\ ", " ")
-                        pattern_txt = ".*" + ".*".join(escaped.split())
+                        pattern_txt = "[\n\s]*" + "[\n\s]*".join(escaped.split())
                         yield re.compile(pattern_txt, re.DOTALL | re.MULTILINE)
         
        #следующего содержания
-       quoted_pattern = re.compile(u"{}:\n?\s?\n?«(.*?)»".format(marker_text), re.MULTILINE | re.DOTALL)
+       marker_text = "[\n\s]*".join(marker_text.split())
+       quoted_pattern = re.compile(u"{}:[\n\s]*«(.*?)»".format(marker_text), re.MULTILINE | re.DOTALL)
        if target_doc.is_amendment:
              sources = find_sources(index, target_doc)
              for match in re.finditer(quoted_pattern, target_doc.text):
@@ -100,7 +104,8 @@ def modify_source_html(pattern, source, target, paragraph):
                child.clear()
                child.append(new_tag)
            else:
-               print ('can not modify')
+               elem.clear()
+               elem.append(new_tag)
 
     source.get_soup()
     for p in source.soup.find_all('p'):
