@@ -87,9 +87,6 @@ def find_sources(index, amendment):
 def modify_source_html(pattern, source, target, paragraph):
     def add_link_to_element(elem, link_url):
        modified = False
-       # first, I tried a simplier construction like
-       # if elem.a: elem.a["href"] = link_url
-       # but it modified only part of the links
        for a in elem.find_all('a'):
             a["href"] = link_url
             modified = True
@@ -106,8 +103,6 @@ def modify_source_html(pattern, source, target, paragraph):
                print ('can not modify')
 
     source.get_soup()
-    # attention!
-    # the construction source.soup.find('p', text=pattern) does not return all the matches
     for p in source.soup.find_all('p'):
         if re.search(pattern, p.text):
             target_fname = os.path.join(target.folder, target.html_file)
