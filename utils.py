@@ -8,7 +8,7 @@ PARAGRAPH = "\d\d?\.(\d\d?\.)?(\d\d?\.)?"
 def clean_text(text):
     stemmer = RussianStemmer()
     stemmed = [stemmer.stem(word) for word in word_tokenize(text)]
-    clean = [word for word in stemmed if word.isalpha() or word.isdigit()]
+    clean = [word for word in stemmed if word[0].isalpha() or word[0].isdigit()]
     return " ".join(clean)
 
 def normalize(text):
@@ -45,6 +45,7 @@ def timeit(func):
         minutes = delta // 60
         seconds = delta % 60
         print ("{m} minutes, {s} seconds in {f}".format(f=func.__name__, m=minutes, s=seconds))
+        return result
     return timed
         
 
