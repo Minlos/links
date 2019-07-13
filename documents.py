@@ -57,7 +57,7 @@ class Document():
         self.soup = None # the soup object is not trivially pickled because of the recursion, so we'd better null it
        
     def __repr__(self):
-        return "<Document: folder {f}; html_file: {html}; title: {t}; processed title: {ct}>".format(f=self.folder, t=self.title, ct=self.clean_title, html=self.html_file)
+        return "<Document: path: {path}; folder {f}; html_file: {html}; title: {t}; processed title: {ct}>".format(f=self.folder, t=self.title, ct=self.clean_title, html=self.html_file, path=os.path.join(self.folder, self.html_file))
 
     def get_soup(self):
         if not self.soup:
