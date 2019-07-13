@@ -1,9 +1,13 @@
 import os
 import re
 from utils import timeit, clean_text
+from documents import FOLDER 
 
 """Текущие проблемы:
 1) Находит документ "Дополнительное соглашение к Договору банковского счета" по тексту "Заключает договоры и дополнительные соглашения к договорам банковских счетов клиентов дополнительных офисов московского региона".Требовать единственное число? То есть все-таки честно разбирать морфологию?
+2) так как ищем стемированные слова, ссылки тоже разрезают слово: счет</a>ов
+3) Возможно, нужно запретить искать слишком короткие названия.
+4) текущая функция add_links_to_doc вставляет по сути только одну ссылку. Чтобы этого избежать, нужно сделать html_text атрибутом документа и каждый раз модифицировать его.
 """
 
 def str_to_pattern_text(s):
@@ -42,8 +46,10 @@ def add_links_to_doc(doc, pattern, title_to_doc):
                 found_text = html_text[m.start(): m.end()]
                 replacement = "<a href={link}>{txt}</a>".format(link=link_url, txt=found_text) 
                 html_text = html_text.replace(found_text, replacement)
-                print (doc)
-                print (replacement)
-                
+                current_fname = os.path.join(FOLDER, doc.folder, doc.html_file)
+                new_fname = current_fname.replace(".html", "_new.html")
+                with open(new_fname, 'w') as fh:
+                    fh.write(html_text)
+                    print (new_fname)
 
 
