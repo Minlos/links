@@ -70,10 +70,9 @@ class Document():
         self.order_titles = []
         num, date = self.extract_params()
         if num and date:
-            for bank in ("Банка", "ОАО Банк ВТБ", ""):
-                title = "Приказ {bank} от {date} № {num}".format(bank=bank, date=date, num=num)
+            for bank in (u"Банка", u"ОАО Банк ВТБ", ""):
+                title = u"Приказ {bank} от {date} № {num}".format(bank=bank, date=date, num=num)
                 self.order_titles.append(title)
-        print (self.order_titles)
 
     def extract_params(self):
         """extract date and number"""
@@ -89,7 +88,6 @@ class Document():
                     parsed_date = dateparser.parse(date.strip())
                     if parsed_date is not None:
                         formatted_date = parsed_date.date().isoformat()
-        print (order_num, formatted_date)
         return (order_num, formatted_date)
 
     def get_soup(self):
